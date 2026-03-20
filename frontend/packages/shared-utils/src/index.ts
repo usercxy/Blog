@@ -32,6 +32,115 @@ export const formatDateLabel = (date: Date | string) =>
     day: '2-digit',
   }).format(new Date(date))
 
+const normalizeDate = (date: Date | string) => {
+  const parsed = new Date(date)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+const getStartOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+const getDayDiff = (date: Date, base = new Date()) => {
+  const currentDay = getStartOfDay(base).getTime()
+  const targetDay = getStartOfDay(date).getTime()
+
+  return Math.round((currentDay - targetDay) / 86_400_000)
+}
+
+const formatTimeLabel = (date: Date) =>
+  new Intl.DateTimeFormat('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
+
+export const formatFriendlyDate = (date: Date | string) => {
+  const parsed = normalizeDate(date)
+
+  if (!parsed) {
+    return '--'
+  }
+
+  const dayDiff = getDayDiff(parsed)
+
+  if (dayDiff === 0) {
+    return '今天'
+  }
+
+  if (dayDiff === 1) {
+    return '昨天'
+  }
+
+  if (parsed.getFullYear() === new Date().getFullYear()) {
+    return new Intl.DateTimeFormat('zh-CN', {
+      month: 'long',
+      day: 'numeric',
+    }).format(parsed)
+  }
+
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(parsed)
+}
+
+export const formatFriendlyDateTime = (date: Date | string) => {
+  const parsed = normalizeDate(date)
+
+  if (!parsed) {
+    return '--'
+  }
+
+  const dayDiff = getDayDiff(parsed)
+  const timeLabel = formatTimeLabel(parsed)
+
+  if (dayDiff === 0) {
+    return `今天 ${timeLabel}`
+  }
+
+  if (dayDiff === 1) {
+    return `昨天 ${timeLabel}`
+  }
+
+  if (parsed.getFullYear() === new Date().getFullYear()) {
+    return `${new Intl.DateTimeFormat('zh-CN', {
+      month: 'long',
+      day: 'numeric',
+    }).format(parsed)} ${timeLabel}`
+  }
+
+  return `${new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(parsed)} ${timeLabel}`
+}
+
+export const formatFriendlyCalendarLabel = (date: Date | string) => {
+  const parsed = normalizeDate(date)
+
+  if (!parsed) {
+    return '--'
+  }
+
+  const prefix = formatFriendlyDate(parsed)
+  const weekday = new Intl.DateTimeFormat('zh-CN', {
+    weekday: 'short',
+  }).format(parsed)
+
+  const friendlyDate = new Intl.DateTimeFormat('zh-CN', {
+    month: 'long',
+    day: 'numeric',
+  }).format(parsed)
+
+  if (prefix === '今天' || prefix === '昨天') {
+    return `${prefix} · ${friendlyDate} ${weekday}`
+  }
+
+  return `${prefix} ${weekday}`
+}
+
 export const formatMonthLabel = (date: Date | string) =>
   new Intl.DateTimeFormat('zh-CN', {
     year: 'numeric',

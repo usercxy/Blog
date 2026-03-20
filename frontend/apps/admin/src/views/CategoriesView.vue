@@ -124,7 +124,6 @@ onMounted(async () => {
             <p>当前共 {{ cmsStore.categories.length }} 个分类。</p>
           </div>
           <el-button type="primary" @click="openCreateDialog">
-            <el-icon><CirclePlus /></el-icon>
             新建分类
           </el-button>
         </div>

@@ -451,6 +451,8 @@ select {
 .admin-panel {
   margin-top: 1rem;
   min-height: 0;
+  min-width: 0;
+  overflow-x: hidden;
   overflow-y: auto;
   padding-right: 0.35rem;
   scrollbar-gutter: stable;
@@ -461,6 +463,7 @@ select {
 .content-stack {
   display: grid;
   gap: 1.2rem;
+  min-width: 0;
 }
 
 .metrics-grid {
@@ -501,6 +504,7 @@ select {
   border: 1px solid var(--admin-border);
   box-shadow: var(--admin-shadow-soft);
   backdrop-filter: blur(16px);
+  min-width: 0;
 }
 
 .panel-card--nested {
@@ -589,16 +593,33 @@ select {
   gap: 1rem;
   align-items: start;
   margin-bottom: 1rem;
+  min-width: 0;
 }
 
 .section-header > div {
   display: grid;
   gap: 0.55rem;
+  min-width: 0;
 }
 
 .table-shell {
   display: grid;
   gap: 1rem;
+  min-width: 0;
+}
+
+.table-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.85rem;
+  padding-top: 0.2rem;
+}
+
+.table-pagination__summary {
+  flex: 1 1 240px;
+  font-size: 0.92rem;
 }
 
 .command-bar {
@@ -606,6 +627,21 @@ select {
   border-radius: var(--admin-radius-md);
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(97, 79, 58, 0.08);
+}
+
+.command-bar--filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1rem;
+}
+
+.toolbar-field--search {
+  width: min(100%, 360px);
+}
+
+.toolbar-field--status {
+  width: 172px;
 }
 
 .admin-form {
@@ -902,10 +938,69 @@ select {
   font-weight: 700;
 }
 
+.cell-stack__title-link {
+  color: var(--admin-text);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.cell-stack__title-link:hover .cell-stack__title,
+.cell-stack__title-link:focus-visible .cell-stack__title {
+  color: var(--admin-accent-strong);
+  text-decoration: underline;
+  text-decoration-color: rgba(15, 118, 110, 0.34);
+  text-underline-offset: 0.18em;
+}
+
 .cell-stack__meta,
 .hint-text {
   color: var(--admin-muted);
   line-height: 1.6;
+}
+
+.article-preview-shell__header {
+  margin-bottom: 0;
+}
+
+.article-preview-shell__actions {
+  justify-content: flex-end;
+}
+
+.article-preview-layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  min-width: 0;
+}
+
+.article-preview-main {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.article-preview-cover {
+  overflow: hidden;
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid rgba(97, 79, 58, 0.1);
+  background: rgba(255, 255, 255, 0.68);
+  aspect-ratio: 16 / 7;
+}
+
+.article-preview-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.article-preview-content {
+  padding: 1.35rem;
+  border-radius: var(--admin-radius-lg);
+  border: 1px solid rgba(97, 79, 58, 0.1);
+  background: rgba(255, 255, 255, 0.68);
+  min-width: 0;
 }
 
 .inline-link-list {
@@ -1029,6 +1124,7 @@ select {
 }
 
 .admin-table {
+  width: 100%;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(97, 79, 58, 0.08);
@@ -1049,8 +1145,84 @@ select {
   border-bottom-color: rgba(97, 79, 58, 0.08) !important;
 }
 
+.admin-table th.el-table__cell .cell {
+  white-space: nowrap;
+}
+
+.admin-table td.el-table__cell .cell {
+  overflow: hidden;
+  padding-top: 0.15rem;
+  padding-bottom: 0.15rem;
+}
+
 .admin-table .el-table__row:hover > td.el-table__cell {
   background: rgba(15, 118, 110, 0.04) !important;
+}
+
+.table-pagination .el-pagination {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: rgba(255, 255, 255, 0.9);
+  --el-pagination-button-color: var(--admin-muted);
+  --el-pagination-hover-color: var(--admin-accent-strong);
+  --el-pagination-button-disabled-bg-color: rgba(244, 237, 226, 0.7);
+  --el-pagination-button-disabled-color: rgba(93, 103, 114, 0.42);
+  --el-pagination-border-radius: 999px;
+  --el-pagination-button-width: 38px;
+  --el-pagination-button-height: 38px;
+  gap: 0.2rem;
+}
+
+.table-pagination .el-pagination .btn-prev,
+.table-pagination .el-pagination .btn-next,
+.table-pagination .el-pagination .el-pager li {
+  border: 1px solid rgba(97, 79, 58, 0.1);
+  box-shadow: 0 8px 18px rgba(43, 35, 24, 0.05);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.table-pagination .el-pagination.is-background .btn-prev,
+.table-pagination .el-pagination.is-background .btn-next,
+.table-pagination .el-pagination.is-background .el-pager li {
+  margin: 0 3px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.table-pagination .el-pagination .btn-prev:hover,
+.table-pagination .el-pagination .btn-next:hover,
+.table-pagination .el-pagination .el-pager li:hover {
+  transform: translateY(-1px);
+  color: var(--admin-accent-strong);
+  border-color: rgba(15, 118, 110, 0.2);
+  background: rgba(15, 118, 110, 0.08);
+  box-shadow: 0 12px 22px rgba(15, 118, 110, 0.12);
+}
+
+.table-pagination .el-pagination .btn-prev:focus-visible,
+.table-pagination .el-pagination .btn-next:focus-visible,
+.table-pagination .el-pagination .el-pager li:focus-visible {
+  outline: 2px solid rgba(15, 118, 110, 0.24);
+  outline-offset: 2px;
+}
+
+.table-pagination .el-pagination.is-background .el-pager li.is-active,
+.table-pagination .el-pagination.is-background .btn-prev.is-active,
+.table-pagination .el-pagination.is-background .btn-next.is-active {
+  color: white;
+  border-color: rgba(15, 118, 110, 0.32);
+  background: linear-gradient(135deg, var(--admin-accent) 0%, #139287 100%);
+  box-shadow: 0 14px 24px rgba(15, 118, 110, 0.18);
+}
+
+.table-pagination .el-pagination .btn-prev.is-disabled,
+.table-pagination .el-pagination .btn-next.is-disabled,
+.table-pagination .el-pagination .el-pager li.is-disabled {
+  border-color: rgba(97, 79, 58, 0.06);
+  box-shadow: none;
 }
 
 .el-button {
@@ -1108,7 +1280,8 @@ select {
   .dashboard-grid,
   .settings-layout,
   .tag-layout,
-  .hero-surface {
+  .hero-surface,
+  .article-preview-layout {
     grid-template-columns: 1fr;
   }
 
@@ -1213,6 +1386,15 @@ select {
   .toolbar .el-button,
   .toolbar .el-input,
   .toolbar .el-select {
+    width: 100%;
+  }
+
+  .table-pagination {
+    align-items: stretch;
+  }
+
+  .table-pagination .el-pagination {
+    justify-content: flex-start;
     width: 100%;
   }
 

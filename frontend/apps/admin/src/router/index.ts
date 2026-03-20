@@ -83,6 +83,15 @@ const routes = [
         },
       },
       {
+        path: '/posts/:id/preview',
+        name: 'post-preview',
+        component: () => import('../views/PostPreviewView.vue'),
+        meta: {
+          title: '文章预览',
+          description: '预览文章当前内容排版，同时保留回到编辑器继续修改的入口。',
+        },
+      },
+      {
         path: '/categories',
         name: 'categories',
         component: () => import('../views/CategoriesView.vue'),

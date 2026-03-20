@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } 
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { formatFriendlyDateTime } from '@blog/shared-utils'
 import PostEditorPreview from '../components/PostEditorPreview.vue'
 import { getApiErrorMessage } from '../services/api'
 import { useCmsStore, type EditableArticle } from '../stores/cms'
@@ -51,7 +52,7 @@ const getCurrentSnapshot = () => createPayloadSnapshot(form)
 const isDirty = computed(() => hasHydratedForm.value && getCurrentSnapshot() !== serverSnapshot.value)
 const autoSaveHint = computed(() => {
   if (lastAutoSavedAt.value) {
-    return `本地草稿最近自动保存于 ${new Date(lastAutoSavedAt.value).toLocaleString('zh-CN', { hour12: false })}`
+    return `本地草稿最近自动保存于 ${formatFriendlyDateTime(lastAutoSavedAt.value)}`
   }
 
   return `自动保存每 ${AUTO_SAVE_DELAY / 1000} 秒执行一次`

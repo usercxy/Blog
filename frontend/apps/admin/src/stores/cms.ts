@@ -85,6 +85,13 @@ interface DashboardStats {
   tagCount: number
 }
 
+interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  pageSize: number
+}
+
 export type ProjectStatus = 'draft' | 'published' | 'archived'
 
 export interface EditableArticle extends Omit<Article, 'id' | 'slug' | 'sections'> {
@@ -125,6 +132,20 @@ export interface SiteConfigForm {
   experiencesText: string
   contactEmail: string
   socialLinksText: string
+}
+
+export interface FetchPostsParams {
+  page?: number
+  pageSize?: number
+  keyword?: string
+  status?: ArticleStatus | 'all'
+}
+
+export interface FetchProjectsParams {
+  page?: number
+  pageSize?: number
+  keyword?: string
+  status?: ProjectStatus | 'all'
 }
 
 interface CmsState {
@@ -556,36 +577,47 @@ export const useCmsStore = defineStore('admin-cms', {
       }
       this.recentArticles = posts.items.map(mapArticle)
     },
-    async fetchProjects(keyword?: string) {
+    async fetchProjects(params: FetchProjectsParams = {}) {
       const token = requireToken()
-      const response = await apiGet<{
-        items: BackendProject[]
-      }>('/admin/projects', {
+      const response = await apiGet<PaginatedResponse<BackendProject>>('/admin/projects', {
         token,
         query: {
-          page: 1,
-          pageSize: 100,
-          keyword,
+          page: params.page ?? 1,
+          pageSize: params.pageSize ?? 20,
+          keyword: params.keyword?.trim() || undefined,
+          status:
+            params.status && params.status !== 'all'
+              ? toApiProjectStatus(params.status)
+              : undefined,
         },
       })
 
       this.projects = sortProjects(response.items.map(mapProject))
-      return this.projects
+      return {
+        ...response,
+        items: this.projects,
+      }
     },
-    async fetchPosts() {
+    async fetchPosts(params: FetchPostsParams = {}) {
       const token = requireToken()
-      const posts = await apiGet<{
-        items: BackendPost[]
-      }>('/admin/posts', {
+      const posts = await apiGet<PaginatedResponse<BackendPost>>('/admin/posts', {
         token,
         query: {
-          page: 1,
-          pageSize: 100,
+          page: params.page ?? 1,
+          pageSize: params.pageSize ?? 20,
+          keyword: params.keyword?.trim() || undefined,
+          status:
+            params.status && params.status !== 'all'
+              ? toApiArticleStatus(params.status)
+              : undefined,
         },
       })
 
       this.articles = posts.items.map(mapArticle)
-      return this.articles
+      return {
+        ...posts,
+        items: this.articles,
+      }
     },
     async fetchPostById(id: string) {
       const token = requireToken()

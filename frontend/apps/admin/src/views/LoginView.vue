@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { consumeSessionExpiredMessage, getApiErrorMessage } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 
 const route = useRoute()
@@ -22,20 +23,26 @@ const submitLogin = async () => {
     ElMessage.success('登录成功，已接入后端管理接口。')
     await router.push(String(route.query.redirect ?? '/dashboard'))
   } catch (error) {
-    const message = error instanceof Error ? error.message : '登录失败'
-    ElMessage.error(message)
+    ElMessage.error(getApiErrorMessage(error))
   } finally {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  const message = consumeSessionExpiredMessage()
+
+  if (message) {
+    ElMessage.warning(message)
+  }
+})
 </script>
 
 <template>
   <div class="login-screen">
     <section class="login-card">
       <span class="login-card__eyebrow">Admin Login</span>
-      <h1>管理后台登录页</h1>
-      <p>当前登录已接入后端鉴权接口，成功后会直接读取真实的文章、分类、标签和站点设置数据。</p>
+      <h1 style="margin: 25px 0 10px;">管理后台登录页</h1>
       <el-form
         class="admin-form"
         label-position="top"

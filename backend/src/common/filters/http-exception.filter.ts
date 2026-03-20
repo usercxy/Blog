@@ -8,6 +8,7 @@ import {
 import type { Response } from 'express';
 
 import type { RequestWithId } from '../interfaces/request-with-id.interface';
+import { localizeErrorMessage } from '../utils/error-message.util';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -24,7 +25,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const exceptionResponse =
       exception instanceof HttpException ? exception.getResponse() : null;
 
-    const message = this.resolveMessage(exceptionResponse, exception);
+    const message = localizeErrorMessage(
+      this.resolveMessage(exceptionResponse, exception),
+      status,
+    );
 
     response.status(status).json({
       code: status,

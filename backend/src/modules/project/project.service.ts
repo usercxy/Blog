@@ -16,24 +16,27 @@ export class ProjectService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async listAdmin(query: ProjectQueryDto) {
-    const where = query.keyword
-      ? {
-          OR: [
-            {
-              title: {
-                contains: query.keyword,
-                mode: 'insensitive' as const,
+    const where = {
+      ...(query.keyword
+        ? {
+            OR: [
+              {
+                title: {
+                  contains: query.keyword,
+                  mode: 'insensitive' as const,
+                },
               },
-            },
-            {
-              slug: {
-                contains: query.keyword,
-                mode: 'insensitive' as const,
+              {
+                slug: {
+                  contains: query.keyword,
+                  mode: 'insensitive' as const,
+                },
               },
-            },
-          ],
-        }
-      : {};
+            ],
+          }
+        : {}),
+      ...(query.status ? { status: query.status } : {}),
+    };
 
     const skip = (query.page - 1) * query.pageSize;
     const [items, total] = await Promise.all([

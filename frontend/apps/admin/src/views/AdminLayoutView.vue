@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { SwitchButton } from "@element-plus/icons-vue";
 import { useRoute, useRouter } from "vue-router";
+import { formatFriendlyCalendarLabel } from "@blog/shared-utils";
 import { useAuthStore } from "../stores/auth";
 
 const router = useRouter();
@@ -64,13 +65,7 @@ const pageInfo = computed(() => {
   };
 });
 
-const todayLabel = computed(() =>
-  new Intl.DateTimeFormat("zh-CN", {
-    month: "long",
-    day: "numeric",
-    weekday: "short",
-  }).format(new Date()),
-);
+const todayLabel = computed(() => formatFriendlyCalendarLabel(new Date()));
 
 const logout = async () => {
   authStore.logout();

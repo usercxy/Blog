@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { formatFriendlyDateTime } from '@blog/shared-utils'
 import { useCmsStore } from '../stores/cms'
 import { getApiErrorMessage } from '../services/api'
 
@@ -82,7 +83,7 @@ onMounted(async () => {
               <strong class="cell-stack__title">{{ article.title }}</strong>
               <p class="cell-stack__meta">{{ article.summary || '这篇文章暂未填写摘要。' }}</p>
             </div>
-            <span class="admin-pill">{{ article.updatedAt }}</span>
+            <span class="admin-pill">{{ formatFriendlyDateTime(article.updatedAt) }}</span>
           </div>
         </div>
 
