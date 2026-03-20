@@ -27,6 +27,12 @@ export interface ArticleSection {
   paragraphs: string[]
 }
 
+export interface ArticleTocItem {
+  id: string
+  title: string
+  level: number
+}
+
 export type ArticleStatus = 'draft' | 'published' | 'hidden'
 
 export interface Article {
@@ -46,6 +52,9 @@ export interface Article {
   seoTitle: string
   seoDescription: string
   sections: ArticleSection[]
+  markdownContent?: string
+  htmlContent?: string
+  toc?: ArticleTocItem[]
 }
 
 export interface Project {

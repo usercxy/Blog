@@ -13,7 +13,7 @@ const footerText = computed(() => siteStore.footerText)
     <AppHeader />
     <main class="web-main">
       <slot />
+      <SiteFooter :text="footerText" />
     </main>
-    <SiteFooter :text="footerText" />
   </div>
 </template>

@@ -672,6 +672,181 @@ select {
   justify-content: space-between;
 }
 
+.post-editor-status {
+  margin-bottom: 0.25rem;
+}
+
+.post-editor-field {
+  margin-bottom: 0.5rem;
+}
+
+.post-editor-shell {
+  display: grid;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.post-editor-toolbar {
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--admin-radius-sm);
+  border: 1px solid rgba(97, 79, 58, 0.1);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.post-editor-toolbar__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.post-editor-toolbar__actions .el-button {
+  margin: 0;
+  min-height: 34px;
+}
+
+.post-editor-toolbar__mode .el-radio-button__inner {
+  min-height: 34px;
+}
+
+.post-editor-panels {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.post-editor-panels--edit,
+.post-editor-panels--preview {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.post-editor-pane {
+  border-radius: var(--admin-radius-md);
+  border: 1px solid rgba(97, 79, 58, 0.1);
+  background: rgba(255, 255, 255, 0.68);
+  min-height: 460px;
+  overflow: hidden;
+}
+
+.post-editor-pane--editor {
+  display: grid;
+  gap: 0.55rem;
+  align-content: start;
+  padding: 0.75rem;
+}
+
+.post-editor-pane--editor .el-textarea__inner {
+  min-height: 420px !important;
+  font-family: "IBM Plex Mono", "Cascadia Mono", "Consolas", monospace;
+  line-height: 1.72;
+}
+
+.post-editor-pane__hint {
+  padding: 0 0.3rem 0.1rem;
+}
+
+.post-editor-pane--preview {
+  padding: 1rem 1.1rem;
+  overflow: auto;
+}
+
+.post-editor-preview {
+  color: var(--admin-text);
+  line-height: 1.75;
+}
+
+.post-editor-preview__empty {
+  margin: 0;
+  color: var(--admin-muted);
+}
+
+.post-editor-preview__content > :first-child {
+  margin-top: 0;
+}
+
+.post-editor-preview__content > :last-child {
+  margin-bottom: 0;
+}
+
+.post-editor-preview__content h1,
+.post-editor-preview__content h2,
+.post-editor-preview__content h3,
+.post-editor-preview__content h4,
+.post-editor-preview__content h5,
+.post-editor-preview__content h6 {
+  margin: 1.15em 0 0.55em;
+  line-height: 1.24;
+  letter-spacing: -0.01em;
+}
+
+.post-editor-preview__content p {
+  margin: 0.75em 0;
+}
+
+.post-editor-preview__content ul,
+.post-editor-preview__content ol {
+  margin: 0.8em 0;
+  padding-left: 1.25rem;
+}
+
+.post-editor-preview__content blockquote {
+  margin: 0.9em 0;
+  padding: 0.7rem 0.95rem;
+  border-left: 3px solid rgba(15, 118, 110, 0.35);
+  border-radius: 10px;
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.post-editor-preview__content hr {
+  border: none;
+  border-top: 1px solid rgba(97, 79, 58, 0.18);
+  margin: 1rem 0;
+}
+
+.post-editor-preview__content code {
+  padding: 0.14rem 0.32rem;
+  border-radius: 6px;
+  background: rgba(97, 79, 58, 0.12);
+  font-family: "IBM Plex Mono", "Cascadia Mono", "Consolas", monospace;
+  font-size: 0.9em;
+}
+
+.post-editor-preview__content .post-editor-preview__code {
+  margin: 0.95rem 0;
+  padding: 0.8rem 0.95rem;
+  border-radius: 12px;
+  overflow-x: auto;
+  background: #1f2937;
+}
+
+.post-editor-preview__content .post-editor-preview__code code {
+  padding: 0;
+  color: #f9fafb;
+  background: transparent;
+}
+
+.post-editor-preview__content .post-editor-preview__image {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 0.9rem 0;
+  border-radius: 12px;
+  border: 1px solid rgba(97, 79, 58, 0.14);
+  object-fit: cover;
+}
+
+.post-editor-preview__content a {
+  color: var(--admin-accent-strong);
+  text-decoration: underline;
+  text-decoration-color: rgba(15, 118, 110, 0.3);
+  text-underline-offset: 3px;
+}
+
 .simple-list {
   display: grid;
   gap: 0.95rem;
@@ -984,6 +1159,10 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .post-editor-panels {
+    grid-template-columns: 1fr;
+  }
+
   .collection-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1013,6 +1192,20 @@ select {
 
   .toolbar,
   .hero-actions {
+    width: 100%;
+  }
+
+  .post-editor-toolbar {
+    align-items: flex-start;
+  }
+
+  .post-editor-toolbar__mode {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .post-editor-toolbar__mode .el-radio-button {
     width: 100%;
   }
 

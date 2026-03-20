@@ -14,7 +14,7 @@ useSeoMeta({
     <div class="container page-stack">
       <section class="card">
         <h1>归档页</h1>
-        <p>按月份聚合历史文章，帮助访客按时间线浏览内容。</p>
+        <p>按月份聚合历史文章，可以按时间线浏览内容。</p>
       </section>
 
       <section class="archive-list">

@@ -138,7 +138,7 @@ onMounted(async () => {
             <div class="cell-stack">
               <h3>{{ category.name }}</h3>
               <p>{{ category.description || "暂无分类说明。" }}</p>
-            </div>  4
+            </div>
             <div class="toolbar toolbar--end" style="margin-top: 15px;">
               <div class="icon-action-group">
                 <el-button

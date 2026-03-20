@@ -48,7 +48,7 @@ useSeoMeta({
 
       <div
         v-if="articles.length"
-        class="grid cards-grid"
+        class="grid article-cards-grid"
       >
         <ArticleCard
           v-for="article in articles"

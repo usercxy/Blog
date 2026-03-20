@@ -295,7 +295,6 @@ export const siteSettings: SiteSettings = {
     { label: '归档', to: '/archive' },
     { label: '项目', to: '/projects' },
     { label: '关于', to: '/about' },
-    { label: '搜索', to: '/search' },
   ],
   socialLinks: [
     { label: 'GitHub', href: 'https://github.com/' },

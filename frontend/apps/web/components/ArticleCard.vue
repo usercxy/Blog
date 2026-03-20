@@ -11,15 +11,21 @@ defineProps<{
 
 <template>
   <article class="card article-card">
-    <img
-      :src="article.cover"
-      :alt="article.title"
-      class="article-card__cover"
+    <NuxtLink
+      :to="`/articles/${article.slug}`"
+      class="article-card__media-link"
+      :aria-label="`阅读 ${article.title}`"
     >
+      <img
+        :src="article.cover"
+        :alt="article.title"
+        class="article-card__cover"
+      >
+    </NuxtLink>
     <div class="article-card__body">
       <span
         v-if="article.sticky"
-        class="eyebrow"
+        class="eyebrow article-card__eyebrow"
       >
         精选推荐
       </span>

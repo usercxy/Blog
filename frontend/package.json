@@ -10,9 +10,12 @@
     "node": ">=22.0.0"
   },
   "scripts": {
+    "clean:web": "npm run clean -w @blog/web",
     "dev:web": "npm run dev -w @blog/web",
     "dev:admin": "npm run dev -w @blog/admin",
     "build:web": "npm run build -w @blog/web",
-    "build:admin": "npm run build -w @blog/admin"
+    "build:admin": "npm run build -w @blog/admin",
+    "start:web": "npm run start -w @blog/web",
+    "preview:web": "npm run preview -w @blog/web"
   }
 }

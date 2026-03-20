@@ -56,7 +56,7 @@ useSeoMeta({
     <div class="container page-stack">
       <section class="section__heading">
         <h1>文章列表</h1>
-        <p>支持基础关键词搜索和分类筛选，当前内容已接入后端公开接口。</p>
+        <p>支持基础关键词搜索和分类筛选</p>
       </section>
 
       <section class="card filters-card">
@@ -92,7 +92,7 @@ useSeoMeta({
 
       <div
         v-if="filteredArticles.length"
-        class="grid cards-grid"
+        class="grid article-cards-grid"
       >
         <ArticleCard
           v-for="article in filteredArticles"

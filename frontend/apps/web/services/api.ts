@@ -2,6 +2,7 @@ import { cloneSiteSettings, formatMonthLabel } from '@blog/shared-utils'
 import type {
   Article,
   ArticleStatus,
+  ArticleTocItem,
   Category,
   ExperienceItem,
   Project,
@@ -52,6 +53,8 @@ interface BackendPostSummary {
 interface BackendPostDetail extends BackendPostSummary {
   content?: {
     markdownContent?: string | null
+    htmlContent?: string | null
+    tocJson?: unknown
   } | null
 }
 
@@ -189,9 +192,36 @@ const splitMarkdownToSections = (markdown?: string | null) => {
   ]
 }
 
+const mapTocJson = (value: unknown): ArticleTocItem[] => {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value.flatMap((item, index) => {
+    if (typeof item !== 'object' || item === null) {
+      return []
+    }
+
+    const entry = item as Record<string, unknown>
+    const id = typeof entry.id === 'string' && entry.id.trim() ? entry.id.trim() : `section-${index + 1}`
+    const title = typeof entry.title === 'string' ? entry.title.trim() : ''
+    const rawLevel = typeof entry.level === 'number' ? entry.level : Number(entry.level)
+    const level = Number.isFinite(rawLevel) ? Math.min(6, Math.max(1, rawLevel)) : 2
+
+    if (!title) {
+      return []
+    }
+
+    return [{ id, title, level }]
+  })
+}
+
 const mapPost = (post: BackendPostSummary | BackendPostDetail): ArticleCardItem => {
   const primaryCategory = mapCategory(post.categories?.[0])
   const tags = (post.tags ?? []).map(mapTag)
+  const markdownContent = 'content' in post ? post.content?.markdownContent ?? '' : ''
+  const htmlContent = 'content' in post ? post.content?.htmlContent ?? '' : ''
+  const toc = 'content' in post ? mapTocJson(post.content?.tocJson) : []
 
   return {
     id: post.id,
@@ -213,6 +243,9 @@ const mapPost = (post: BackendPostSummary | BackendPostDetail): ArticleCardItem 
       'content' in post
         ? splitMarkdownToSections(post.content?.markdownContent)
         : splitMarkdownToSections(post.summary),
+    markdownContent: markdownContent || undefined,
+    htmlContent: htmlContent || undefined,
+    toc,
     category: primaryCategory,
     tags,
   }
