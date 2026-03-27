@@ -12,6 +12,95 @@ const cmsStore = useCmsStore()
 const projectId = computed(() => route.params.id ? String(route.params.id) : undefined)
 const form = reactive<EditableProject>(cmsStore.getEditableProject())
 const saving = ref(false)
+const coverFileInputRef = ref<HTMLInputElement>()
+const coverUploading = ref(false)
+const coverPreviewVisible = ref(false)
+
+const sanitizeUploadStem = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+const createUploadFilename = (file: File) => {
+  const extensionIndex = file.name.lastIndexOf('.')
+  const extension = extensionIndex >= 0 ? file.name.slice(extensionIndex) : ''
+  const titleStem = sanitizeUploadStem(form.slug || form.title)
+  const fileStem = sanitizeUploadStem(extensionIndex >= 0 ? file.name.slice(0, extensionIndex) : file.name)
+  const stem = titleStem || fileStem || 'project-cover'
+  return `project-cover-${stem}${extension}`
+}
+
+const getImageDisplayName = (value: string) => {
+  const normalized = value.trim()
+  if (!normalized) {
+    return ''
+  }
+
+  const sanitized = normalized.split('#')[0]?.split('?')[0] ?? normalized
+  const segments = sanitized.split('/').filter(Boolean)
+  const rawName = segments[segments.length - 1] ?? sanitized
+
+  try {
+    return decodeURIComponent(rawName) || rawName
+  } catch {
+    return rawName
+  }
+}
+
+const coverDisplayName = computed(() => getImageDisplayName(form.cover))
+
+const openImagePicker = () => {
+  if (!coverFileInputRef.value) {
+    return
+  }
+
+  coverFileInputRef.value.value = ''
+  coverFileInputRef.value.click()
+}
+
+const handleCoverFileChange = async (event: Event) => {
+  const target = event.target as HTMLInputElement | null
+  const file = target?.files?.[0]
+
+  if (target) {
+    target.value = ''
+  }
+
+  if (!file) {
+    return
+  }
+
+  if (file.type && !file.type.startsWith('image/')) {
+    ElMessage.warning('当前入口仅支持上传图片文件。')
+    return
+  }
+
+  coverUploading.value = true
+
+  try {
+    const media = await cmsStore.uploadMedia(file, createUploadFilename(file))
+    form.cover = media.url
+    ElMessage.success('项目封面上传成功，已自动回填链接。')
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error))
+  } finally {
+    coverUploading.value = false
+  }
+}
+
+const openCoverPreview = () => {
+  if (!form.cover) {
+    return
+  }
+
+  coverPreviewVisible.value = true
+}
+
+const closeCoverPreview = () => {
+  coverPreviewVisible.value = false
+}
 
 const syncForm = async (id?: string) => {
   try {
@@ -49,7 +138,7 @@ const saveProject = async () => {
 </script>
 
 <template>
-  <div class="content-stack">
+  <div class="content-stack editor-surface">
     <el-form
       class="panel-card admin-form"
       label-position="top"
@@ -75,7 +164,46 @@ const saveProject = async () => {
           <el-input-number v-model="form.sortOrder" :min="0" :max="9999" />
         </el-form-item>
         <el-form-item label="封面图">
-          <el-input v-model="form.cover" placeholder="可选，填写封面图片地址" />
+          <div class="upload-field">
+            <button
+              type="button"
+              class="media-field"
+              :class="{ 'media-field--empty': !form.cover }"
+              :disabled="!form.cover"
+              @click="openCoverPreview"
+            >
+              <span class="media-field__label">当前图片</span>
+              <strong class="media-field__name">
+                {{ coverDisplayName || '尚未上传封面图片' }}
+              </strong>
+              <small class="media-field__hint">
+                {{ form.cover ? '' : '上传后会在这里显示图片名称' }}
+              </small>
+            </button>
+            <div class="upload-field__actions">
+              <el-button
+                :loading="coverUploading"
+                @click="openImagePicker"
+              >
+                {{ coverUploading ? '上传中...' : '上传封面图' }}
+              </el-button>
+              <el-button
+                v-if="form.cover"
+                text
+                type="primary"
+                @click="openCoverPreview"
+              >
+                预览图片
+              </el-button>
+            </div>
+            <input
+              ref="coverFileInputRef"
+              class="visually-hidden-input"
+              type="file"
+              accept="image/*"
+              @change="handleCoverFileChange"
+            >
+          </div>
         </el-form-item>
       </div>
 
@@ -137,5 +265,26 @@ const saveProject = async () => {
         </div>
       </div>
     </el-form>
+
+    <div
+      v-if="coverPreviewVisible && form.cover"
+      class="editor-image-preview"
+      @click="closeCoverPreview"
+    >
+      <div class="editor-image-preview__dialog" @click.stop>
+        <div class="editor-image-preview__header">
+          <div class="editor-image-preview__meta">
+            <span class="editor-image-preview__label">图片预览</span>
+            <strong>{{ coverDisplayName }}</strong>
+          </div>
+          <el-button text type="primary" @click="closeCoverPreview">
+            关闭
+          </el-button>
+        </div>
+        <div class="editor-image-preview__body">
+          <img :src="form.cover" :alt="coverDisplayName || '封面图预览'">
+        </div>
+      </div>
+    </div>
   </div>
 </template>

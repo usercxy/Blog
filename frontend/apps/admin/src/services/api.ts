@@ -12,7 +12,7 @@ interface ApiErrorPayload {
 }
 
 interface RequestOptions {
-  body?: unknown
+  body?: BodyInit | unknown
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   query?: Record<string, string | number | boolean | undefined>
   token?: string
@@ -81,7 +81,12 @@ const extractPayloadMessage = (payload: ApiErrorPayload | ApiEnvelope<unknown> |
     return message.trim()
   }
 
-  if (typeof payload?.error === 'string' && payload.error.trim()) {
+  if (
+    payload
+    && 'error' in payload
+    && typeof payload.error === 'string'
+    && payload.error.trim()
+  ) {
     return payload.error.trim()
   }
 
@@ -151,15 +156,22 @@ const handleSessionExpired = async (message: string) => {
 const request = async <T>(path: string, options: RequestOptions = {}) => {
   const hadToken = Boolean(options.token)
   let response: Response
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData
+  const requestBody: BodyInit | undefined =
+    options.body === undefined
+      ? undefined
+      : options.body instanceof FormData
+        ? options.body
+        : JSON.stringify(options.body)
 
   try {
     response = await fetch(buildUrl(path, options.query), {
       method: options.method ?? 'GET',
       headers: {
-        'Content-Type': 'application/json',
         ...(options.token ? { Authorization: `Bearer ${options.token}` } : {}),
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       },
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: requestBody,
     })
   } catch (error) {
     throw new AdminApiError('无法连接到服务器，请检查后端服务是否已启动。', {
@@ -194,6 +206,13 @@ export const apiGet = <T>(path: string, options?: Omit<RequestOptions, 'method' 
   request<T>(path, options)
 
 export const apiPost = <T>(path: string, body?: unknown, options?: Omit<RequestOptions, 'method' | 'body'>) =>
+  request<T>(path, {
+    ...options,
+    method: 'POST',
+    body,
+  })
+
+export const apiPostForm = <T>(path: string, body: FormData, options?: Omit<RequestOptions, 'method' | 'body'>) =>
   request<T>(path, {
     ...options,
     method: 'POST',

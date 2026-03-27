@@ -10,6 +10,12 @@ interface EnvVars {
   JWT_ACCESS_EXPIRES_IN: string;
   JWT_REFRESH_SECRET: string;
   JWT_REFRESH_EXPIRES_IN: string;
+  COS_SECRET_ID: string;
+  COS_SECRET_KEY: string;
+  COS_BUCKET: string;
+  COS_REGION: string;
+  COS_PUBLIC_BASE_URL: string;
+  COS_PATH_PREFIX: string;
 }
 
 const envSchema = Joi.object<EnvVars>({
@@ -24,6 +30,12 @@ const envSchema = Joi.object<EnvVars>({
   JWT_ACCESS_EXPIRES_IN: Joi.string().trim().default('2h'),
   JWT_REFRESH_SECRET: Joi.string().trim().min(8).required(),
   JWT_REFRESH_EXPIRES_IN: Joi.string().trim().default('7d'),
+  COS_SECRET_ID: Joi.string().trim().required(),
+  COS_SECRET_KEY: Joi.string().trim().required(),
+  COS_BUCKET: Joi.string().trim().required(),
+  COS_REGION: Joi.string().trim().required(),
+  COS_PUBLIC_BASE_URL: Joi.string().trim().uri({ scheme: ['http', 'https'] }).required(),
+  COS_PATH_PREFIX: Joi.string().trim().default('uploads'),
 });
 
 export function validateEnv(config: Record<string, unknown>) {

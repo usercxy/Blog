@@ -10,7 +10,7 @@ import type {
   Tag,
 } from '@blog/shared-types'
 import { cloneSiteSettings } from '@blog/shared-utils'
-import { apiDelete, apiGet, apiPost, apiPut } from '../services/api'
+import { apiDelete, apiGet, apiPost, apiPostForm, apiPut } from '../services/api'
 import { useAuthStore } from './auth'
 
 interface BackendCategory {
@@ -90,6 +90,19 @@ interface PaginatedResponse<T> {
   total: number
   page: number
   pageSize: number
+}
+
+interface UploadedMedia {
+  id: string
+  filename: string
+  originalName: string
+  mimeType: string
+  storage: string
+  path: string
+  size: number
+  createdAt: string
+  updatedAt: string
+  url: string
 }
 
 export type ProjectStatus = 'draft' | 'published' | 'archived'
@@ -704,6 +717,18 @@ export const useCmsStore = defineStore('admin-cms', {
       }
 
       return article
+    },
+    async uploadMedia(file: File, filename?: string) {
+      const token = requireToken()
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const normalizedFilename = filename?.trim()
+      if (normalizedFilename) {
+        formData.append('filename', normalizedFilename)
+      }
+
+      return apiPostForm<UploadedMedia>('/admin/media/upload', formData, { token })
     },
     async deleteArticle(id: string) {
       const token = requireToken()

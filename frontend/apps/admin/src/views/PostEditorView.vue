@@ -31,8 +31,13 @@ const articleId = computed(() => route.params.id ? String(route.params.id) : und
 const form = reactive<EditableArticle>(cmsStore.getEditableArticle())
 const formRef = ref<FormInstance>()
 const bodyEditorRef = ref<BodyEditorRef>()
+const coverFileInputRef = ref<HTMLInputElement>()
+const inlineImageFileInputRef = ref<HTMLInputElement>()
 const viewMode = ref<EditorMode>('split')
 const saving = ref(false)
+const coverUploading = ref(false)
+const inlineImageUploading = ref(false)
+const coverPreviewVisible = ref(false)
 const syncingForm = ref(false)
 const hasHydratedForm = ref(false)
 const serverSnapshot = ref('')
@@ -65,6 +70,75 @@ const editorTools: Array<{ label: string; snippet: string }> = [
   { label: '链接', snippet: '[链接标题](https://example.com)' },
   { label: '图片', snippet: '![图片描述](https://example.com/cover.jpg)' },
 ]
+
+const sanitizeUploadStem = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+const createUploadFilename = (file: File, prefix: string) => {
+  const extensionIndex = file.name.lastIndexOf('.')
+  const extension = extensionIndex >= 0 ? file.name.slice(extensionIndex) : ''
+  const titleStem = sanitizeUploadStem(form.slug || form.title)
+  const fileStem = sanitizeUploadStem(extensionIndex >= 0 ? file.name.slice(0, extensionIndex) : file.name)
+  const stem = titleStem || fileStem || prefix
+  return `${prefix}-${stem}${extension}`
+}
+
+const openImagePicker = (input: HTMLInputElement | undefined) => {
+  if (!input) {
+    return
+  }
+
+  input.value = ''
+  input.click()
+}
+
+const extractSelectedFile = (event: Event) => {
+  const target = event.target as HTMLInputElement | null
+  const file = target?.files?.[0]
+
+  if (target) {
+    target.value = ''
+  }
+
+  return file
+}
+
+const ensureImageFile = (file: File) => {
+  if (file.type && file.type.startsWith('image/')) {
+    return true
+  }
+
+  ElMessage.warning('当前入口仅支持上传图片文件。')
+  return false
+}
+
+const toMarkdownImageAlt = (fileName: string) => {
+  const extensionIndex = fileName.lastIndexOf('.')
+  return (extensionIndex >= 0 ? fileName.slice(0, extensionIndex) : fileName).trim() || '图片描述'
+}
+
+const getImageDisplayName = (value: string) => {
+  const normalized = value.trim()
+  if (!normalized) {
+    return ''
+  }
+
+  const sanitized = normalized.split('#')[0]?.split('?')[0] ?? normalized
+  const segments = sanitized.split('/').filter(Boolean)
+  const rawName = segments[segments.length - 1] ?? sanitized
+
+  try {
+    return decodeURIComponent(rawName) || rawName
+  } catch {
+    return rawName
+  }
+}
+
+const coverDisplayName = computed(() => getImageDisplayName(form.cover))
 
 const readLocalDraft = (id?: string) => {
   try {
@@ -317,6 +391,73 @@ const saveArticle = async () => {
   }
 }
 
+const uploadCoverImage = async (file: File) => {
+  if (!ensureImageFile(file)) {
+    return
+  }
+
+  coverUploading.value = true
+
+  try {
+    const media = await cmsStore.uploadMedia(file, createUploadFilename(file, 'post-cover'))
+    form.cover = media.url
+    await formRef.value?.validateField('cover').catch(() => undefined)
+    ElMessage.success('封面图上传成功，已自动回填链接。')
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error))
+  } finally {
+    coverUploading.value = false
+  }
+}
+
+const uploadInlineImage = async (file: File) => {
+  if (!ensureImageFile(file)) {
+    return
+  }
+
+  inlineImageUploading.value = true
+
+  try {
+    const media = await cmsStore.uploadMedia(file, createUploadFilename(file, 'post-inline'))
+    insertMarkdownSnippet(`\n![${toMarkdownImageAlt(file.name)}](${media.url})\n`)
+    ElMessage.success('图片已上传并插入正文。')
+  } catch (error) {
+    ElMessage.error(getApiErrorMessage(error))
+  } finally {
+    inlineImageUploading.value = false
+  }
+}
+
+const handleCoverFileChange = async (event: Event) => {
+  const file = extractSelectedFile(event)
+  if (!file) {
+    return
+  }
+
+  await uploadCoverImage(file)
+}
+
+const handleInlineImageFileChange = async (event: Event) => {
+  const file = extractSelectedFile(event)
+  if (!file) {
+    return
+  }
+
+  await uploadInlineImage(file)
+}
+
+const openCoverPreview = () => {
+  if (!form.cover) {
+    return
+  }
+
+  coverPreviewVisible.value = true
+}
+
+const closeCoverPreview = () => {
+  coverPreviewVisible.value = false
+}
+
 const insertMarkdownSnippet = (snippet: string) => {
   const editor = bodyEditorRef.value?.textarea
   if (!editor) {
@@ -403,6 +544,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearAutoSaveTimer()
+  closeCoverPreview()
   window.removeEventListener('keydown', handleGlobalShortcut)
   window.removeEventListener('beforeunload', handleBeforeUnload)
 })
@@ -430,7 +572,7 @@ onBeforeRouteLeave(async () => {
 </script>
 
 <template>
-  <div class="content-stack">
+  <div class="content-stack editor-surface">
     <el-form
       ref="formRef"
       :model="form"
@@ -497,7 +639,46 @@ onBeforeRouteLeave(async () => {
 
       <div class="form-grid">
         <el-form-item label="封面图" prop="cover">
-          <el-input v-model="form.cover" />
+          <div class="upload-field">
+            <button
+              type="button"
+              class="media-field"
+              :class="{ 'media-field--empty': !form.cover }"
+              :disabled="!form.cover"
+              @click="openCoverPreview"
+            >
+              <span class="media-field__label">当前图片</span>
+              <strong class="media-field__name">
+                {{ coverDisplayName || '尚未上传封面图片' }}
+              </strong>
+              <small class="media-field__hint">
+                {{ form.cover ? '' : '上传后会在这里显示图片名称' }}
+              </small>
+            </button>
+            <div class="upload-field__actions">
+              <el-button
+                :loading="coverUploading"
+                @click="openImagePicker(coverFileInputRef)"
+              >
+                {{ coverUploading ? '上传中...' : '上传封面图' }}
+              </el-button>
+              <el-button
+                v-if="form.cover"
+                text
+                type="primary"
+                @click="openCoverPreview"
+              >
+                预览图片
+              </el-button>
+            </div>
+            <input
+              ref="coverFileInputRef"
+              class="visually-hidden-input"
+              type="file"
+              accept="image/*"
+              @change="handleCoverFileChange"
+            >
+          </div>
         </el-form-item>
         <el-form-item label="发布日期">
           <el-input v-model="form.publishedAt" type="date" disabled />
@@ -530,6 +711,21 @@ onBeforeRouteLeave(async () => {
               >
                 {{ tool.label }}
               </el-button>
+              <el-button
+                text
+                size="small"
+                :loading="inlineImageUploading"
+                @click="openImagePicker(inlineImageFileInputRef)"
+              >
+                {{ inlineImageUploading ? '上传中...' : '上传图片' }}
+              </el-button>
+              <input
+                ref="inlineImageFileInputRef"
+                class="visually-hidden-input"
+                type="file"
+                accept="image/*"
+                @change="handleInlineImageFileChange"
+              >
             </div>
             <el-radio-group
               v-model="viewMode"
@@ -581,5 +777,26 @@ onBeforeRouteLeave(async () => {
         </el-button>
       </div>
     </el-form>
+
+    <div
+      v-if="coverPreviewVisible && form.cover"
+      class="editor-image-preview"
+      @click="closeCoverPreview"
+    >
+      <div class="editor-image-preview__dialog" @click.stop>
+        <div class="editor-image-preview__header">
+          <div class="editor-image-preview__meta">
+            <span class="editor-image-preview__label">图片预览</span>
+            <strong>{{ coverDisplayName }}</strong>
+          </div>
+          <el-button text type="primary" @click="closeCoverPreview">
+            关闭
+          </el-button>
+        </div>
+        <div class="editor-image-preview__body">
+          <img :src="form.cover" :alt="coverDisplayName || '封面图预览'">
+        </div>
+      </div>
+    </div>
   </div>
 </template>

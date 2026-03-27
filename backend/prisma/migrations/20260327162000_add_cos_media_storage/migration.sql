@@ -1,0 +1,1 @@
+ALTER TYPE "MediaStorage" ADD VALUE IF NOT EXISTS 'COS';

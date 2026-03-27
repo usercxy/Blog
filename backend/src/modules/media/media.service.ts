@@ -1,12 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { MediaStorage, type MediaFile } from '@prisma/client';
 
 import { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { CreateMediaDto } from './dto/create-media.dto';
+import { CosStorageService } from './cos-storage.service';
+import { UploadMediaDto } from './dto/upload-media.dto';
 
 @Injectable()
 export class MediaService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly cosStorageService: CosStorageService,
+  ) {}
 
   async list(query: PaginationQueryDto) {
     const skip = (query.page - 1) * query.pageSize;
@@ -22,16 +27,45 @@ export class MediaService {
     ]);
 
     return {
-      items,
+      items: items.map((item) => this.toMediaResponse(item)),
       total,
       page: query.page,
       pageSize: query.pageSize,
     };
   }
 
-  async create(dto: CreateMediaDto) {
-    return this.prismaService.mediaFile.create({
-      data: dto,
+  async upload(file: Express.Multer.File, dto: UploadMediaDto, userId: string) {
+    const uploadedFile = await this.cosStorageService.uploadFile(file, dto, userId);
+    const mediaFile = await this.prismaService.mediaFile.create({
+      data: {
+        filename: uploadedFile.filename,
+        originalName: file.originalname,
+        mimeType: uploadedFile.mimeType,
+        storage: MediaStorage.COS,
+        path: uploadedFile.key,
+        size: file.size,
+      },
     });
+
+    return this.toMediaResponse(mediaFile);
+  }
+
+  private toMediaResponse(mediaFile: MediaFile) {
+    return {
+      ...mediaFile,
+      url: this.resolveMediaUrl(mediaFile),
+    };
+  }
+
+  private resolveMediaUrl(mediaFile: MediaFile) {
+    if (/^https?:\/\//i.test(mediaFile.path)) {
+      return mediaFile.path;
+    }
+
+    if (mediaFile.storage === MediaStorage.COS) {
+      return this.cosStorageService.getPublicUrl(mediaFile.path);
+    }
+
+    return mediaFile.path;
   }
 }

@@ -235,6 +235,7 @@ enum ProjectStatus {
 
 enum MediaStorage {
   LOCAL
+  COS
   S3
   OSS
   MINIO

@@ -92,6 +92,7 @@ Authorization: Bearer <accessToken>
 ### 5.4 媒体存储类型 `MediaStorage`
 
 - `LOCAL`
+- `COS`
 - `S3`
 - `OSS`
 - `MINIO`
@@ -564,7 +565,7 @@ Authorization: Bearer <accessToken>
 | `page` | number | 否 | 页码 |
 | `pageSize` | number | 否 | 每页数量 |
 
-### 16.2 新增媒体记录
+### 16.2 上传媒体文件
 
 - 方法：`POST`
 - 路径：`/api/admin/media/upload`
@@ -572,19 +573,43 @@ Authorization: Bearer <accessToken>
 
 说明：
 
-- 当前实现的是“媒体元数据入库”
-- 还不是 multipart 文件上传
+- 使用 `multipart/form-data` 上传文件到腾讯云 COS
+- 单文件大小限制 `15MB`
+- 当前未额外限制 MIME 类型，默认允许任意文件类型上传
+- 文件会自动上传到当前登录用户 id 对应的目录下，路径格式为 `uploads/{userId}/{filename}`
+- 文件记录会写入 `media_files` 表，`storage` 为 `COS`
+- `path` 字段存储 COS 对象 key，返回结果额外包含可直接访问的 `url`
 
-请求体：
+表单字段：
+
+| 字段 | 类型 | 必填 | 说明 |
+| --- | --- | --- | --- |
+| `file` | file | 是 | 上传文件 |
+| `filename` | string | 否 | 自定义文件名，扩展名可选 |
+
+请求示例：
+
+```bash
+curl -X POST "http://localhost:8000/api/admin/media/upload" \
+  -H "Authorization: Bearer <accessToken>" \
+  -F "file=@demo-cover.png" \
+  -F "filename=my-post-cover"
+```
+
+响应数据示例：
 
 ```json
 {
-  "filename": "demo-cover.png",
+  "id": "2",
+  "filename": "my-post-cover-550e8400-e29b-41d4-a716-446655440000.png",
   "originalName": "demo-cover.png",
   "mimeType": "image/png",
-  "storage": "LOCAL",
-  "path": "/uploads/demo-cover.png",
-  "size": 1024
+  "storage": "COS",
+  "path": "uploads/1/my-post-cover-550e8400-e29b-41d4-a716-446655440000.png",
+  "size": 1024,
+  "createdAt": "2026-03-27T08:15:00.000Z",
+  "updatedAt": "2026-03-27T08:15:00.000Z",
+  "url": "https://your-bucket-appid.cos.ap-guangzhou.myqcloud.com/uploads/1/my-post-cover-550e8400-e29b-41d4-a716-446655440000.png"
 }
 ```
 
